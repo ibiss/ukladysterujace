@@ -5,11 +5,11 @@
  *   Author: Dariusz Michalski
  */ 
  ;program dodaje do siebie dwie tablice wykorzystujac wskazniki pokazujace na tablice, ktore sa przesownane w kolejnych krokach
- 
+ ;po ostatnich zajeciach zmienilem zapis z Big Endian na Little Endian czyli zapusujemy zablice dlugosci 2 np. 00ff + 00ff wynik = 01ffe
 .include "m32def.inc" 
  
 .DSEG
-	.equ LEN=2				;ustawienie dlugosci tablic
+	.equ LEN=5				;ustawienie dlugosci tablic
 	tab_A: .BYTE LEN		;tablica jest zadeklarowane w 'data IRAM' od adresu 0x0060(wg. Atmel Studio) i tam nalezy wprowadzic wartosci
 	tab_B: .BYTE LEN		;tablica jest zadeklarowana w 'data IRAM' od adresu 0x0060 + LEN
 
@@ -21,6 +21,15 @@
 	LDI ZL, LOW(LEN)		;rejestr Z bedzie potrzebny do zakonczenia dodawania
 	LDI ZH, HIGH(LEN)
 
+	change_endian:			;przesowam wskazniki na koniec 
+		LD R1, X+
+		LD R1, Y+
+		SUBI ZL, 1
+		BRNE change_endian
+
+	LDI ZL, LOW(LEN)		;przywracamy wartosc rejestru Z
+	LDI ZH, HIGH(LEN)
+
 	CP ZL, R1				;rejestry sa ustawione na 0 i dlatego mozemy sprawdzic czy dlugosc
 	BRNE start				;tablic nie jest rowna 0 i zakonczyc algorytm
 	CP ZH, R1 
@@ -28,13 +37,21 @@
 	 
 	start:
 	CLC
+	LDI R19, 0				;rejestr pomocniczy potrzebny do dodawania do liczby flagi Carry
+
+	;X i Y wskazuja poza tablicami dlatego wykorzystujemy wlasnosc LD dzieki czemu najpier przesowa wskaznik pozniej zczytuje
 
 	liczenie:
-		LD R1, X+			;ladujemy do R1 wartosc z bitu jaki pokazuje X, czyi na poczatku tab_A[0], nastepnie przesuniemy wskaznik na tab_A[1]
-		LD R2, Y			;ladujemy do R2, ale nie przesowamy, poniewaz do tab_B[0] wprowadzimy wynik dodawania tab_A[0]+ tab_B[0]
-		ADC R2, R1
-		ST Y+, R2			;wprowadzamy wynik dodawania i przesowamy wskaznik pokazujacy na tab_B[1]
-		SBIW ZL, 1			;zmniejszam licznik i jezeli dojdzie do 0 to konczymy dodawanie
+		MOV R20, R18		;po operacji dodawania ADD lub ADC znika flaga Carry bez wzgledu czy bedzie uwzgledniona czy nie
+		LD R16, -X			;przesuniecie w lewo i zapis do pamieci tymczasowej
+		LD R17, -Y			;przesuniecie w lewo i zapis do pamieci tymczasowej
+		ADD R17, R16		;dodawanie
+		LDI R18, 0			;zerujemy zapisany stan flagi Carry
+		ADC R18, R19		;zapisujemy stan flagi Carry (R19 = 0)
+		ADD R17, R20		;dodajemy do liczby przepelnienie jesli wystapilo
+		ST Y, R17			;wprowadzamy wynik dodawania
+		
+		SUBI ZL, 1			;zmniejszam licznik i jezeli dojdzie do 0 to konczymy dodawanie
 		BRNE liczenie 
 
 	koniec:
