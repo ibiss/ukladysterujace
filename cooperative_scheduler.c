@@ -27,11 +27,6 @@ void execute()
 		cli();
 		for(int i=0; i<MAX_NUMBER_OF_TASK; i++)
 		{
-			if(TASKS[i].foo == 0)
-			{
-				continue;
-				sei();
-			}
 			if(TASKS[i].ready!=0){
 				TASKS[i].ready--;
 				sei();
@@ -40,6 +35,7 @@ void execute()
 				break;
 			}
 		}
+		sei(); //???
 	}
 }
 
