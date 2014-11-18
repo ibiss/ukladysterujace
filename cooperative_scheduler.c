@@ -6,7 +6,7 @@
 
 TASK TASKS[MAX_NUMBER_OF_TASK];
 
-void schedule()
+void schedule()//Funkcja wywolywana przez przerwanie, dekrementuje timetogo taska i ustawia jego gotowosc
 {
 	for(int i=0; i<MAX_NUMBER_OF_TASK; i++)
 	{
@@ -20,7 +20,7 @@ void schedule()
 	}
 }
 
-void execute()
+void execute()//Sprawdza tablice taskow czy sa gotowe, jesli tak wykonuje taska, zmienia jego gotowosc, resetuje timetogo, blokuje i odblokowuje przerwania
 {
 	while(1)
 	{
@@ -48,7 +48,7 @@ void AddTask(uint32_t priority, uint32_t period, func_ptr foo, void * params)
 	TASKS[priority].params = params;
 }
 
-void timer0_init(void)
+void timer0_init(void)//Ustawienie przerwan na 1 ms
 {
 	sei();
 	TCCR0 |= (1 << WGM01);
