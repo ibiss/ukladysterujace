@@ -4,7 +4,7 @@
 #define COOPERATIVE_SCHEDULER_H_
 #define MAX_NUMBER_OF_TASK 2
 typedef void (*func_ptr) (void *);
-
+ 
 typedef struct
 {
  func_ptr foo;

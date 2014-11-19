@@ -35,7 +35,7 @@ void execute()//Sprawdza tablice taskow czy sa gotowe, jesli tak wykonuje taska,
 				break;
 			}
 		}
-		sei(); //jeśli nie znalezlismy taska odblokowujemy przerwania
+		sei(); //jeśli nie znalezlismy taska odblokowujemy przerwania 
 	}
 }
 
