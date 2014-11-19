@@ -29,13 +29,13 @@ void execute()//Sprawdza tablice taskow czy sa gotowe, jesli tak wykonuje taska,
 		{
 			if(TASKS[i].ready!=0){
 				TASKS[i].ready--;
-				sei();
+				sei();//poniewaz znalezlismy odpowiedniego taska do uruchomienia odblokowujemy przerwania
 				TASKS[i].foo(TASKS[i].params);
 				TASKS[i].timetogo = TASKS[i].timeout;
 				break;
 			}
 		}
-		sei(); //???
+		sei(); //jeśli nie znalezlismy taska odblokowujemy przerwania
 	}
 }
 
@@ -50,35 +50,15 @@ void AddTask(uint32_t priority, uint32_t period, func_ptr foo, void * params)
 
 void timer0_init(void)//Ustawienie przerwan na 1 ms
 {
-	sei();
 	TCCR0 |= (1 << WGM01);
-	TIMSK |= (1<<OCIE0);
+	TIMSK |= (1 << OCIE0);
 	OCR0  = 250;
+	sei();
 	TCCR0 |= (1 << CS00) | (1 << CS01);
+
 }
 
 ISR(TIMER0_COMP_vect)
 {
 	schedule();
-}
-int i = 0;
-int j = 0;
-int c = 0;
-int main(void)
-{
-	timer0_init();
-	AddTask(0,50, keyboardTask, NULL);
-	AddTask(1, 20, serialReciveTask, NULL);
-	AddTask(7, 500, watchDogTask, NULL);
-	execute();
-}
-
-void keyboardTask(void * params){
-	i++;
-}
-void serialReciveTask(void * params){
-	j++;
-}
-void watchDogTask(void * params){
-	c++;
 }
