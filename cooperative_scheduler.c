@@ -47,18 +47,3 @@ void AddTask(uint32_t priority, uint32_t period, func_ptr foo, void * params)
 	TASKS[priority].timetogo = period;
 	TASKS[priority].params = params;
 }
-
-void timer0_init(void)//Ustawienie przerwan na 1 ms
-{
-	TCCR0 |= (1 << WGM01);
-	TIMSK |= (1 << OCIE0);
-	OCR0  = 250;
-	sei();
-	TCCR0 |= (1 << CS00) | (1 << CS01);
-
-}
-
-ISR(TIMER0_COMP_vect)
-{
-	schedule();
-}

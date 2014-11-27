@@ -17,6 +17,6 @@ typedef struct
 
 void schedule();
 void execute();
-void AddTask(uint32_t priority, uint32_t period, func_ptr f, void * params);
+void AddTask(uint32_t priority, uint32_t period, func_ptr foo, void * params);
 
 #endif /* COOPERATIVE_SCHEDULER_H_ */
