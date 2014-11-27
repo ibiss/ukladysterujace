@@ -3,6 +3,7 @@
 #ifndef COOPERATIVE_SCHEDULER_H_
 #define COOPERATIVE_SCHEDULER_H_
 #define MAX_NUMBER_OF_TASK 2
+
 typedef void (*func_ptr) (void *);
  
 typedef struct
@@ -16,6 +17,6 @@ typedef struct
 
 void schedule();
 void execute();
-void AddTask(priority, period, func_ptr, void * params);
+void AddTask(uint32_t priority, uint32_t period, func_ptr f, void * params);
 
 #endif /* COOPERATIVE_SCHEDULER_H_ */

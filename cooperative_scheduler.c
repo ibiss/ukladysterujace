@@ -1,4 +1,4 @@
-//author: Dariusz Michalski, Agnieszka S?oma, Mateusz Mikita
+//author: Dariusz Michalski, Agnieszka Sloma, Mateusz Mikita
 #define F_CPU 16000000UL  // 16 MHz
 #include <avr/io.h>
 #include <avr/interrupt.h>
