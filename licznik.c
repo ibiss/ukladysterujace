@@ -16,7 +16,11 @@ ISR(TIMER0_COMP_vect)
 {
 	//dzieki takiemu rozwiazaniu nasza funkcja showDigit odswieza sie co milisekunde. Trzeba 
 	miliseconds++;
-	if(miliseconds >= 1000) seconds++;
+	if(miliseconds >= 1000)
+	{
+		seconds++;
+		miliseconds = 0;
+	}
 	schedule();
 }
 void timer0_init(void)//Ustawienie przerwan na 1 ms
