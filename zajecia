@@ -8,6 +8,7 @@
 //#define NULL ((char *)0)
 uint8_t CYFRA[] = {0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8, 0x80, 0x90};
 uint32_t seconds = 0;
+uint8_t l = 0;
 ISR(TIMER0_COMP_vect)
 {
 	change_segment();
@@ -31,15 +32,28 @@ uint8_t liczba(uint8_t segment)
 		break;
 	}
 }
-uint8_t l = 0;
-uint8_t liczbyzklawiatury()
+uint8_t liczba2(uint8_t segment)
 {
-	return l;
+	switch (segment)
+	{
+		case 0:
+		return l % 10;
+		break;
+		case 1:
+		return (l / 10) % 10;
+		break;
+		case 2:
+		return (l / 100) % 10;
+		break;
+		case 3:
+		return (l / 1000) % 10;
+		break;
+	}
 }
 void change_segment()
 {
 	static uint8_t segment = 0;
-	PORTA = CYFRA[liczbyzklawiatury()];//liczby
+	PORTA = CYFRA[liczby2()];//liczby
 	PORTB = PORTB & 0xF0 |   (~(1 << segment)) & 0x0f;
 	segment = (segment +1) % 4;
 }
@@ -86,22 +100,15 @@ void ZamienCzasNaSekwencje(void * params)
 	else
 		WyswietlSekwencje(++segment);//umiescilismy milisekundy na poczatku tablicy dzieki czemu mozemy latwo pominac milisekundy i kropke
 }*/
-void KlawiszNaSekwencje(uint8_t klawisz)
+void KlawiszNaLiczbe(uint8_t klawisz)
 {
-//tablica Liczb zalezna od kolejnosci podpiecia kabli na plytce
+	//tablica Liczb zalezna od kolejnosci podpiecia kabli na plytce
 	uint8_t Liczby[] = {0xFF, 0x77, 0xB7, 0xD7, 0xE7, 0x7B, 0xBB, 0xDB, 0xEB, 0x7D, 0xBD, 0xDD, 0xED, 0x7E, 0xBE, 0xDE, 0xEE};
 	uint8_t i = 0;
 	for (;i <17;i++)
 		if(Liczby[i] == klawisz)
 		break;
-	l = i;/*
-	i = 0;
-	while(num > 9)
-	{
-		segment[i++] = CYFRA[num % 10];
-		num /= 10;
-	}
-	return segment;*/
+	l = i;
 }
 void ObslugaKlawiatury(void * params)
 {
@@ -116,10 +123,7 @@ void ObslugaKlawiatury(void * params)
 	PORTD = 0x0F;//kolumna lub na odwrot :D
 	for (int i=0;i<10;i++);
 	K |= PINA;
-	KlawiszNaSekwencje(K);
-	// wykorzystujac alternatywe laczymy odczyt z wierszy i kolumn
-	//uint8_t SEKWENCJA[] = {0x00, 0x00, 0x00, 0x00};
-	//WyswietlSekwencje( KlawiszNaSekwencje( K, SEKWENCJA ) );
+	KlawiszNaLiczbe(K);
 }
 
 void AddSecond()
