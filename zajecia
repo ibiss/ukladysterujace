@@ -5,135 +5,136 @@
 #include <stdio.h>
 #include <util/delay.h>
 #include "cooperative_scheduler.h"
-#define NULL ((char *)0)
+//#define NULL ((char *)0)
 uint8_t CYFRA[] = {0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8, 0x80, 0x90};
-int seconds = 0;
-int miliseconds = 0;
-
+uint32_t seconds = 0;
 ISR(TIMER0_COMP_vect)
 {
-//dzieki takiemu rozwiazaniu nasza funkcja showDigit odswieza sie co milisekunde. Trzeba
-miliseconds++;
-if(miliseconds >= 1000)
+	change_segment();
+	schedule();
+}
+uint8_t liczba(uint8_t segment)
 {
-seconds++;
-miliseconds = 0;
+	switch (segment)
+	{
+		case 0:
+		return seconds % 10;
+		break;
+		case 1:
+		return (seconds / 10) % 10;
+		break;
+		case 2:
+		return (seconds / 100) % 10;
+		break;
+		case 3:
+		return (seconds / 1000) % 10;
+		break;
+	}
 }
-schedule();
+uint8_t l = 0;
+uint8_t liczbyzklawiatury()
+{
+	return l;
 }
+void change_segment()
+{
+	static uint8_t segment = 0;
+	PORTA = CYFRA[liczbyzklawiatury()];//liczby
+	PORTB = PORTB & 0xF0 |   (~(1 << segment)) & 0x0f;
+	segment = (segment +1) % 4;
+}
+
+
 void timer0_init(void)//Ustawienie przerwan na 1 ms
 {
-TCCR0 |= (1 << WGM01);
-TIMSK |= (1 << OCIE0);
-OCR0 = 250;
-sei();
-TCCR0 |= (1 << CS00) | (1 << CS01);
-}
-void showDigit(void * params)
+	TCCR0 |= (1 << WGM01);
+	TIMSK |= (1 << OCIE0);
+	OCR0 = 250;
+	sei();
+	TCCR0 |= (1 << CS00) | (1 << CS01);
+}/*
+void WyswietlSekwencje(uint8_t* SEKWENCJA)
 {
-//funkcja moze pwinna sie wlaczac co 25 milisekund moze albo jeszcze dluzszy odstep czasowy bo 1000milisekund to duzo
-//if(miliseconds % 25) return;
-uint8_t SEGMENT[] = {0, 0, 0 , 0};
-uint8_t num = seconds;
-uint8_t i;
-//w petlach while dzieki operacji modulo i dzieleniu mozemy odczytac kazda cyfre w liczbie
-if(seconds <= 999)// do 999 sekund wyswietlamy kropke i setki milisekund
+	//Pamietac o tym, ze ostatnio wyswietlalo nam przeciwienstwa CYFR wiec moze ~SEKWENCJA zadziala!!!
+	
+	PORTB = ~0x01;
+	uint8_t numer_wyswietlacza = 0x00;
+	for(uint8_t i = 0; i < 4; i++)
+	{
+		numer_wyswietlacza = numer_wyswietlacza << 1;//przesuwamy się na następny segment 0x01, 0x02, 0x04, 0x08
+		PORTA = (*(SEKWENCJA++));
+		PORTB = ~numer_wyswietlacza;
+		_delay_ms(1000);//do testow klawiatury zwiekszyc, chyba ze przytrzymie sie klawisz;
+		PORTB = 0xFF;//wylaczamy segmenty
+	}*/
+/*}
+void ZamienCzasNaSekwencje(void * params)
 {
-SEGMENT[3] = CYFRA[miliseconds / 100];
-i = 2;
-while(num > 9)
+	uint8_t static SEKWENCJA[] = {0x00, 0x00, 0x00, 0x00, 0x00};
+	uint8_t num = seconds, i = 0, *segment = SEKWENCJA;
+	segment[0] = CYFRA[miliseconds / 100];//setki milisekund
+	while(num > 9)
+	{
+		segment[++i] = CYFRA[num % 10];//za pomoca operacji modulo mozemy odczytac cyfre
+		num /= 10;
+	}
+	if(seconds < 999)
+	{
+		segment[1] = 0xFF ^ (0x80 ^ segment[1]);// XORy dodajace kropke do liczby bedacej na 3 pozycji.
+		WyswietlSekwencje(segment);
+	}
+	else
+		WyswietlSekwencje(++segment);//umiescilismy milisekundy na poczatku tablicy dzieki czemu mozemy latwo pominac milisekundy i kropke
+}*/
+void KlawiszNaSekwencje(uint8_t klawisz)
 {
-SEGMENT[i] = CYFRA[num % 10];
-i--;
-num /= 10;
-}
-SEGMENT[2] = 0xFF ^ (0x80 ^ SEGMENT[2]);// XORy dodajace kropke do liczby bedacej na 3 pozycji.
-}
-else // po 1000 sekundach wyswietlamy same sekundy
-{
-i = 3;
-while(num > 9)
-{
-SEGMENT[i] = CYFRA[num % 10];
-i--;
-num /= 10;
-}
-}
-//Nie wiem jaka kolejnosc powinna być oczywiscie to tylko szkielet funkcjionalnosci, pamietac trzeba o zerowaniu aby zapobiedz efektu smużenia
-//gasimy segment i zaswiecamy nastepny
-PORTA = SEGMENT[0];
-PORTB = 0x01;
-PORTB = 0x00;
-PORTA = SEGMENT[1];
-PORTB = 0x02;
-PORTB = 0x00;
-PORTA = SEGMENT[2];
-PORTB = 0x04;
-PORTB = 0x00;
-PORTA = SEGMENT[3];
-PORTB = 0x08;
-PORTB = 0x00;
-}
-uint8_t SEGMENT[] = {0, 0, 0 , 0};
-void keyboard(void * params)
-{
-	DDRB |= 0xFF;
-	//wiersz
-	PORTA = 0x00;
-	DDRA = 0x0F;
-	PORTA = 0xF0;
-	for (int i=0;i<10;i++);
-	uint8_t key = PINA;
-	PORTA = 0x00;
-	DDRA = 0xF0;
-	PORTA = 0x0F;
-	for (int i=0;i<10;i++);
-	key |= PINA;
+//tablica Liczb zalezna od kolejnosci podpiecia kabli na plytce
 	uint8_t Liczby[] = {0xFF, 0x77, 0xB7, 0xD7, 0xE7, 0x7B, 0xBB, 0xDB, 0xEB, 0x7D, 0xBD, 0xDD, 0xED, 0x7E, 0xBE, 0xDE, 0xEE};
 	uint8_t i = 0;
 	for (;i <17;i++)
-		if(Liczby[i] == key)
-			break;
-	showKey(i);
-}
-void showKey(uint8_t liczba)
-{
-	DDRC |= 0xFF;
-	DDRD |= 0xFF;
-	PORTC = 0xFF;
-	PORTD = 0xFF;
-	
-	uint8_t i = 3;
-	while(liczba > 0)
+		if(Liczby[i] == klawisz)
+		break;
+	l = i;/*
+	i = 0;
+	while(num > 9)
 	{
-		SEGMENT[i] = CYFRA[liczba % 10];
-		i--;
-		liczba /= 10;
+		segment[i++] = CYFRA[num % 10];
+		num /= 10;
 	}
-	//Nie wiem jaka kolejnosc powinna być oczywiscie to tylko szkielet funkcjionalnosci, pamietac trzeba o zerowaniu aby zapobiedz efektu smużenia
-	//gasimy segment i zaswiecamy nastepny
-	PORTC = SEGMENT[0];
-	PORTD = 0x01;
-	_delay_ms(10);
+	return segment;*/
+}
+void ObslugaKlawiatury(void * params)
+{
+	//DDR |= 0xFF;
 	PORTD = 0x00;
+	DDRD = 0x0F;
+	PORTD = 0xF0;//wiersz
+	for (int i=0;i<10;i++);
+	uint8_t K = PINA;
+	PORTD = 0x00;
+	DDRD = 0xF0;
+	PORTD = 0x0F;//kolumna lub na odwrot :D
+	for (int i=0;i<10;i++);
+	K |= PINA;
+	KlawiszNaSekwencje(K);
+	// wykorzystujac alternatywe laczymy odczyt z wierszy i kolumn
+	//uint8_t SEKWENCJA[] = {0x00, 0x00, 0x00, 0x00};
+	//WyswietlSekwencje( KlawiszNaSekwencje( K, SEKWENCJA ) );
+}
 
-	PORTC = SEGMENT[1];
-	PORTD = 0x02;
-	_delay_ms(5);
-	PORTD = 0x00;
-	PORTC = SEGMENT[2];
-	PORTD = 0x04;
-	_delay_ms(5);
-	PORTD = 0x00;
-	PORTC = SEGMENT[3];
-	PORTD = 0x08;
-	_delay_ms(5);
-	PORTD = 0x00;
+void AddSecond()
+{
+	seconds ++;
 }
 int main(int argc, char * argv[])
 {
+	DDRA |= 0xFF;
+	DDRB |= 0xFF;
+	//PORTB = ~0x01;
+	//PORTA = 0x00;
+		
 	timer0_init();
-	//AddTask(0,1, showDigit, CYFRA);
-	AddTask(0, 1, keyboard, CYFRA);
+	//AddTask(0,1000, AddSecond, NULL);
+	AddTask(0, 1, ObslugaKlawiatury, NULL);
 	execute();
 }
