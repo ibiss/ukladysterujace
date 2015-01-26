@@ -53,7 +53,7 @@ uint8_t liczba2(uint8_t segment)
 void change_segment()
 {
 	static uint8_t segment = 0;
-	PORTA = CYFRA[liczby2()];//liczby
+	PORTA = CYFRA[liczba(segment)];//liczby
 	PORTB = PORTB & 0xF0 |   (~(1 << segment)) & 0x0f;
 	segment = (segment +1) % 4;
 }
